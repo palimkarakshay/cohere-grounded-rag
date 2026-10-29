@@ -28,9 +28,21 @@ def tokenize(text: str) -> list[str]:
     return _TOKEN.findall(text.lower())
 
 
+def stem(tok: str) -> str:
+    """Crude suffix stripping, enough for the offline backend to match flight/flights, approve/approved."""
+    for suf in ("ing", "ed", "es", "s", "e"):
+        if len(tok) > len(suf) + 2 and tok.endswith(suf):
+            return tok[: -len(suf)]
+    return tok
+
+
 def content_terms(text: str) -> set[str]:
-    """Query terms that carry meaning: no stop words, no 1-char tokens. Used by the offline backend only."""
-    return {t for t in tokenize(text) if t not in _STOP and len(t) > 1}
+    """Stemmed query terms that carry meaning: no stop words, no 1-char tokens. Offline backend only."""
+    return {stem(t) for t in tokenize(text) if t not in _STOP and len(t) > 1}
+
+
+def stemmed(text: str) -> set[str]:
+    return {stem(t) for t in tokenize(text)}
 
 
 @dataclass
@@ -173,7 +185,7 @@ class OfflineBackend:
             if not toks or not q:
                 scored.append((i, 0.0))
                 continue
-            overlap = len(q & set(toks))
+            overlap = len(q & stemmed(d))
             scored.append((i, overlap / math.sqrt(len(toks)) / len(q)))
         scored.sort(key=lambda x: -x[1])
         return scored[:top_n]
@@ -210,11 +222,11 @@ class OfflineBackend:
         for d in docs:
             text = d["data"].get("text", "")
             for sent in re.split(r"(?<=[.!?])\s+", text):
-                score = len(q & set(tokenize(sent)))
+                score = len(q & stemmed(sent))
                 if best is None or score > best[0] or (score == best[0] and len(sent) < len(best[1])):
                     best = (score, sent.strip(), d["id"])
         score, sent, did = best
-        if score < 2:  # a real model declines when the documents do not cover the question; so do we
+        if not q or score < 2 or score / len(q) < 0.4:  # a real model declines when the documents do not cover it
             return ChatResult(text="The provided documents do not contain the answer to that question.", citations=[],
                               raw_message={"role": "assistant", "content": "not covered"})
         answer = f"According to the documents: {sent}"

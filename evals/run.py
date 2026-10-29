@@ -12,6 +12,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent / "src"))
 
+from grounded_rag.config import Settings
 from grounded_rag.service import Service
 
 
