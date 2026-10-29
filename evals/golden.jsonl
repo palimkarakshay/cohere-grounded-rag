@@ -1,0 +1,12 @@
+{"id": "q1", "question": "How many days before departure must air travel be booked?", "groups": ["public"], "expected_docs": ["travel-policy"], "must_contain": ["14"]}
+{"id": "q2", "question": "Who can approve business class for a long flight?", "groups": ["public"], "expected_docs": ["travel-policy"], "must_contain": ["Director General"]}
+{"id": "q3", "question": "What is the threshold above which a contract must be competed on the tendering service?", "groups": ["public"], "expected_docs": ["procurement-thresholds"], "must_contain": ["40,000"]}
+{"id": "q4", "question": "Who approves a sole-source justification above 40,000 dollars?", "groups": ["public"], "expected_docs": ["procurement-thresholds"], "must_contain": ["Assistant Deputy Minister"]}
+{"id": "q5", "question": "Can Protected B information be entered into a public generative AI tool?", "groups": ["public"], "expected_docs": ["ai-use-guideline"], "must_contain": ["never"]}
+{"id": "q6", "question": "What classification is the enterprise AI workspace accredited for and where is it deployed?", "groups": ["public"], "expected_docs": ["data-classification"], "must_contain": ["Protected B"]}
+{"id": "q7", "question": "Within how many hours must a suspected security incident be reported to the SOC?", "groups": ["security"], "expected_docs": ["incident-response"], "must_contain": ["one hour"]}
+{"id": "q8", "question": "Within how many hours must a suspected security incident be reported to the SOC?", "groups": ["public"], "expected_docs": [], "must_contain": [], "expect_refusal": true}
+{"id": "q9", "question": "How many days of annual leave do employees accrue after 8 years of service?", "groups": ["hr"], "expected_docs": ["hr-leave"], "must_contain": ["20"]}
+{"id": "q10", "question": "How long does a manager have to respond to an accommodation request?", "groups": ["hr", "public"], "expected_docs": ["hr-leave"], "must_contain": ["10 working days"]}
+{"id": "q11", "question": "Are receipts required for meal allowances?", "groups": ["public"], "expected_docs": ["travel-policy"], "must_contain": ["not required"]}
+{"id": "q12", "question": "What must a supplier hold before award of a contract involving Protected B information?", "groups": ["public"], "expected_docs": ["procurement-thresholds"], "must_contain": ["Designated Organization Screening"]}
