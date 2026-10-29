@@ -22,6 +22,10 @@ Design choices that matter in production:
 - **Offline backend.** `GR_OFFLINE=1` (or no API key) swaps in a deterministic backend: hashed bag-of-words embeddings, overlap reranking, extractive grounded answers with correct citation spans, and a scripted tool-use policy. The whole system, including the agent loop and the eval, runs without network. Tests use it. Live runs use the real models.
 - **Structured logs.** One JSON line per embed/rerank/chat/search/http event with latency, counts, token usage and a request id.
 
+## Demo
+
+`demo/demo.sh` runs the whole story in about a minute: tests and eval gates, ingest, a cited answer, a refusal for a caller without access, the same question answered for a caller with access, and an agent run with its trace. Offline by default; with `COHERE_API_KEY` set it runs against the live models.
+
 ## Run
 
 ```bash
