@@ -98,13 +98,43 @@ class CohereBackend:
 
         self.s = settings
         self.co = cohere.ClientV2(api_key=settings.cohere_api_key)
+        self._calls: list[float] = []  # timestamps for the client-side throttle
+
+    def _throttle(self) -> None:
+        """Client-side rate limit (trial keys: 10 calls/min) so a batch eval never trips the server limit."""
+        if self.s.rate_limit_per_min <= 0:
+            return
+        now = time.monotonic()
+        self._calls = [t for t in self._calls if now - t < 60]
+        if len(self._calls) >= self.s.rate_limit_per_min:
+            wait = 60 - (now - self._calls[0]) + 0.5
+            log(logger, "throttle", wait_s=round(wait, 1))
+            time.sleep(max(0.0, wait))
+        self._calls.append(time.monotonic())
+
+    def _call(self, fn, **kwargs):
+        """Retry on 429 with backoff; everything else propagates."""
+        from cohere.errors import TooManyRequestsError
+
+        delay = 6.0
+        for attempt in range(8):
+            self._throttle()
+            try:
+                return fn(**kwargs)
+            except TooManyRequestsError:
+                if attempt == 7:
+                    raise
+                log(logger, "retry_429", attempt=attempt + 1, sleep_s=delay)
+                time.sleep(delay)
+                delay = min(delay * 1.5, 30)
 
     def embed(self, texts: list[str], *, input_type: str) -> np.ndarray:
         out: list[list[float]] = []
         for i in range(0, len(texts), 96):  # API limit: 96 texts per call
             batch = texts[i : i + 96]
             t0 = time.perf_counter()
-            resp = self.co.embed(
+            resp = self._call(
+                self.co.embed,
                 model=self.s.embed_model,
                 texts=batch,
                 input_type=input_type,
@@ -119,7 +149,7 @@ class CohereBackend:
         if not documents:
             return []
         t0 = time.perf_counter()
-        resp = self.co.rerank(model=self.s.rerank_model, query=query, documents=documents, top_n=top_n)
+        resp = self._call(self.co.rerank, model=self.s.rerank_model, query=query, documents=documents, top_n=top_n)
         log(logger, "rerank", model=self.s.rerank_model, n=len(documents), top_n=top_n, ms=round((time.perf_counter() - t0) * 1000))
         return [(r.index, float(r.relevance_score)) for r in resp.results]
 
@@ -131,7 +161,7 @@ class CohereBackend:
         if tools:
             kwargs["tools"] = tools
         t0 = time.perf_counter()
-        resp = self.co.chat(**kwargs)
+        resp = self._call(self.co.chat, **kwargs)
         m = resp.message
         text = "".join(c.text for c in (m.content or []) if getattr(c, "type", "text") == "text")
         cits: list[Citation] = []

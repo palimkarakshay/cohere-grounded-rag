@@ -44,6 +44,8 @@ curl -s localhost:8080/ask -H 'content-type: application/json' -H 'X-Groups: hr'
 GR_OFFLINE=0 uv run python evals/run.py   # live eval
 ```
 
+Trial keys allow 10 calls per minute: set `GR_RATE_LIMIT_PER_MIN=10` (the client throttles and retries on 429), and expect the live eval to take about four minutes. Latencies in a throttled run include the waits.
+
 Models default to `command-a-03-2025`, `embed-v4.0`, `rerank-v3.5`; override with `GR_CHAT_MODEL`, `GR_EMBED_MODEL`, `GR_RERANK_MODEL` (and `GR_EMBED_DIM`). Private deployments: point the SDK at your endpoint via the usual Cohere client settings.
 
 ## Evaluation

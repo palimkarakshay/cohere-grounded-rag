@@ -35,7 +35,7 @@ def run(k: int = 5) -> dict:
             if d in expected:
                 rr = 1.0 / i
                 break
-        ans = svc.rag.ask(g["question"], groups=g["groups"], top_n=k)
+        ans = svc.rag.ask(g["question"], groups=g["groups"], top_n=k, hits=hits)
         contains = all(m.lower() in ans.answer.lower() for m in g["must_contain"]) if g["must_contain"] else None
         refusal_ok = (not ans.grounded) if g.get("expect_refusal") else None
         leaked = bool(set(ranked_docs) - svc.store.visible_doc_ids(g["groups"]))
@@ -67,7 +67,7 @@ def write_report(out: dict, path: Path) -> None:
     lines += ["", "| id | recall@k | rr | must_contain | cited | refusal_ok | acl_leak | ms | answer |", "|---|---|---|---|---|---|---|---|---|"]
     for r in out["results"]:
         lines.append(f"| {r['id']} | {r['recall_at_k']} | {r['rr']} | {r['must_contain']} | {r['cited']} | {r['refusal_ok']} | {r['acl_leak']} | {r['ms']} | {r['answer'].replace('|', '/')} |")
-    lines += ["", "Gates: acl_leaks must be 0; refusals_correct must be true; recall@k >= 0.9 on the offline backend."]
+    lines += ["", "Gates: acl_leaks must be 0; refusals_correct must be true; recall@k >= 0.9."]
     path.write_text("\n".join(lines) + "\n")
 
 

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -8,7 +9,7 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(env_prefix="GR_", env_file=".env", extra="ignore")
 
-    cohere_api_key: str | None = None
+    cohere_api_key: str | None = Field(default=None, validation_alias=AliasChoices("COHERE_API_KEY", "GR_COHERE_API_KEY"))
     offline: bool = False  # force the deterministic backend even if a key is present
     chat_model: str = "command-a-03-2025"
     embed_model: str = "embed-v4.0"
@@ -24,6 +25,7 @@ class Settings(BaseSettings):
     agent_max_steps: int = 6
     agent_max_tool_calls: int = 8
     log_level: str = "INFO"
+    rate_limit_per_min: int = 0  # client-side throttle; trial keys allow 10 calls/min
 
     @property
     def use_live(self) -> bool:
@@ -31,9 +33,4 @@ class Settings(BaseSettings):
 
 
 def get_settings() -> Settings:
-    s = Settings()
-    if s.cohere_api_key is None:
-        import os
-
-        s.cohere_api_key = os.environ.get("COHERE_API_KEY")
-    return s
+    return Settings()

@@ -52,9 +52,10 @@ class RAG:
         self.store, self.backend, self.s = store, backend, settings
         self.retriever = Retriever(store, backend, settings)
 
-    def ask(self, question: str, *, groups: list[str], top_n: int | None = None) -> Answer:
+    def ask(self, question: str, *, groups: list[str], top_n: int | None = None, hits: list[Hit] | None = None) -> Answer:
         t0 = time.perf_counter()
-        hits = self.retriever.search(question, groups=groups, top_n=top_n)
+        if hits is None:
+            hits = self.retriever.search(question, groups=groups, top_n=top_n)
         docs = hits_to_documents(hits, self.store)
         if not docs:
             return Answer(question, "No documents you have access to cover this question.", [], [], grounded=False,
